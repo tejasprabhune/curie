@@ -2,18 +2,57 @@
 
 import React, { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowUpTrayIcon, DocumentTextIcon, AcademicCapIcon } from '@heroicons/react/24/outline';
+import { ArrowUpTrayIcon, DocumentTextIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
+
+const researchPapers = [
+  {
+    title: "Attention Is All You Need",
+    authors: "Vaswani et al.",
+    year: "2017",
+    abstract: "The transformer architecture that revolutionized natural language processing and machine learning."
+  },
+  {
+    title: "Learning Transferable Visual Models From Natural Language Supervision",
+    authors: "Radford et al.",
+    year: "2021",
+    abstract: "CLIP: A neural network that learns visual concepts from natural language supervision."
+  },
+  {
+    title: "LLaMA: Open and Efficient Foundation Language Models",
+    authors: "Touvron et al.",
+    year: "2023",
+    abstract: "A collection of foundation language models ranging from 7B to 65B parameters."
+  }
+];
 
 export default function HomePage() {
   const router = useRouter();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [uploadedFile, setUploadedFile] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file && file.type === 'application/pdf') {
       setSelectedFile(file);
+      // Automatically upload the file
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+        // In a real app, you would send this to your backend
+        console.log('Uploading file:', file.name);
+        // Simulate upload delay
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        setUploadedFile(file.name);
+        setSelectedFile(null);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+      } catch (error) {
+        console.error('Error uploading file:', error);
+        alert('Error uploading file. Please try again.');
+      }
     } else {
       alert('Please select a PDF file');
     }
@@ -29,42 +68,29 @@ export default function HomePage() {
     setIsDragging(false);
   };
 
-  const handleDrop = (event: React.DragEvent) => {
+  const handleDrop = async (event: React.DragEvent) => {
     event.preventDefault();
     setIsDragging(false);
     
     const file = event.dataTransfer.files?.[0];
     if (file && file.type === 'application/pdf') {
       setSelectedFile(file);
+      // Automatically upload the file
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+        // In a real app, you would send this to your backend
+        console.log('Uploading file:', file.name);
+        // Simulate upload delay
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        setUploadedFile(file.name);
+        setSelectedFile(null);
+      } catch (error) {
+        console.error('Error uploading file:', error);
+        alert('Error uploading file. Please try again.');
+      }
     } else {
       alert('Please drop a PDF file');
-    }
-  };
-
-  const handleUpload = async () => {
-    if (!selectedFile) {
-      alert('Please select a file first');
-      return;
-    }
-
-    try {
-      // Create FormData and append the file
-      const formData = new FormData();
-      formData.append('file', selectedFile);
-
-      // In a real application, you would send this to your backend
-      // For now, we'll just show a success message
-      console.log('Uploading file:', selectedFile.name);
-      alert('File uploaded successfully!');
-      
-      // Reset the file selection
-      setSelectedFile(null);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    } catch (error) {
-      console.error('Error uploading file:', error);
-      alert('Error uploading file. Please try again.');
     }
   };
 
@@ -129,12 +155,28 @@ export default function HomePage() {
               <h2 className="text-2xl font-semibold text-gray-900 mb-2">
                 Upload Research Paper
               </h2>
-              <p className="text-gray-600 mb-6">
-                {selectedFile 
-                  ? `Selected file: ${selectedFile.name}`
-                  : 'Drag and drop your PDF or click to browse files'
-                }
-              </p>
+              {selectedFile ? (
+                <div className="mb-6">
+                  <p className="text-gray-600 mb-2">Uploading:</p>
+                  <p className="text-lg font-medium text-primary-600">
+                    {selectedFile.name}
+                  </p>
+                </div>
+              ) : uploadedFile ? (
+                <div className="mb-6">
+                  <div className="flex items-center justify-center space-x-2 text-green-600">
+                    <CheckCircleIcon className="w-5 h-5" />
+                    <p className="text-lg font-medium">Successfully uploaded:</p>
+                  </div>
+                  <p className="text-lg font-medium text-primary-600 mt-2">
+                    {uploadedFile}
+                  </p>
+                </div>
+              ) : (
+                <p className="text-gray-600 mb-6">
+                  Drag and drop your PDF or click to browse files
+                </p>
+              )}
               <input
                 type="file"
                 ref={fileInputRef}
@@ -142,75 +184,43 @@ export default function HomePage() {
                 onChange={handleFileSelect}
                 className="hidden"
               />
-              <div className="space-y-4">
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="w-full py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all duration-200"
-                >
-                  Select File
-                </button>
-                {selectedFile && (
-                  <button
-                    onClick={handleUpload}
-                    className="w-full py-3 px-4 border border-primary-600 rounded-xl shadow-sm text-sm font-medium text-primary-600 bg-white hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all duration-200"
-                  >
-                    Upload File
-                  </button>
-                )}
-              </div>
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all duration-200"
+              >
+                Upload File
+              </button>
             </div>
           </div>
 
-          {/* Features Section */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <div className="w-12 h-12 bg-primary-50 rounded-lg flex items-center justify-center mb-4">
-                <DocumentTextIcon className="w-6 h-6 text-primary-600" />
+          {/* Research Papers Section */}
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Past Papers</h2>
+            {researchPapers.map((paper, index) => (
+              <div key={index} className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-200">
+                <div className="flex items-start space-x-4">
+                  <div className="w-12 h-12 bg-primary-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <DocumentTextIcon className="w-6 h-6 text-primary-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">{paper.title}</h3>
+                    <p className="text-sm text-gray-500 mb-2">
+                      {paper.authors} ({paper.year})
+                    </p>
+                    <p className="text-gray-600">{paper.abstract}</p>
+                    <button
+                      className="mt-4 text-primary-600 hover:text-primary-700 font-medium transition-colors duration-200"
+                      onClick={() => {
+                        // In a real app, this would navigate to the paper's detailed view
+                        alert(`Loading ${paper.title}...`);
+                      }}
+                    >
+                      Learn More →
+                    </button>
+                  </div>
+                </div>
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Research Analysis
-              </h3>
-              <p className="text-gray-600">
-                Curie analyzes your research paper to identify key concepts and learning objectives
-              </p>
-            </div>
-
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <div className="w-12 h-12 bg-primary-50 rounded-lg flex items-center justify-center mb-4">
-                <AcademicCapIcon className="w-6 h-6 text-primary-600" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Course Generation
-              </h3>
-              <p className="text-gray-600">
-                Automatically generates structured learning materials and interactive content
-              </p>
-            </div>
-
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <div className="w-12 h-12 bg-primary-50 rounded-lg flex items-center justify-center mb-4">
-                <svg
-                  className="w-6 h-6 text-primary-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Progress Tracking
-              </h3>
-              <p className="text-gray-600">
-                Monitor your learning progress and track your understanding of the material
-              </p>
-            </div>
+            ))}
           </div>
         </div>
       </main>

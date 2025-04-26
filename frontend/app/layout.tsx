@@ -1,12 +1,15 @@
+import './globals.css'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
-import './globals.css'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Curie - Transform Research Papers into Learnable Courses',
-  description: 'An AI-powered platform that transforms research papers into structured, learnable courses.',
+  title: 'Curie - Transform Research Papers into Courses',
+  description: 'Transform research papers into interactive learning experiences',
+  icons: {
+    icon: '/favicon.ico',
+  },
 }
 
 export default function RootLayout({
