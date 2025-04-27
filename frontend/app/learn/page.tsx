@@ -21,6 +21,10 @@ const units = [
 export default function LearnPage() {
   const router = useRouter();
 
+  const importJson = async() => {
+    
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-primary-50">
       {/* Header */}

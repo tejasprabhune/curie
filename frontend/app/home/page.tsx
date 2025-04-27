@@ -117,34 +117,32 @@ export default function HomePage() {
     const response = await fetch(get_url);
     const num_lessons = await response.json();
 
-    if (num_lessons.status != 0) {
-      console.log("error! not finished")
-    } else {
-      const num_units = num_lessons.num_lessons;
+    while (num_lessons.status != 0) {
+      console.log("error! not finished");
+    }
+    const num_units = num_lessons.num_lessons;
 
-      const return_json = {
-        title: num_lessons.title,
-        summary: num_lessons.summary,
-      }
-
-      for (let i = 0; i < num_units; i++) {
-        const lesson_url = get_url + '/' + i;
-        const response = await fetch(lesson_url);
-        const info = await response.json();
-        return_json["title" + i] = info.title;
-        return_json["summary" + i] = info.summary;
-      }
-
-      const return_string = JSON.stringify(return_json, null, 2);
-      fs.writeFile('data.json', return_string, (err) => {
-        if (err) {
-          console.error('Error writing file:', err);
-        } else {
-          console.log('File has been saved!');
-        }
-      });
+    const return_json = {
+      title: num_lessons.title,
+      summary: num_lessons.summary,
     }
 
+    for (let i = 0; i < num_units; i++) {
+      const lesson_url = get_url + '/' + i;
+      const response = await fetch(lesson_url);
+      const info = await response.json();
+      return_json["title" + i] = info.title;
+      return_json["summary" + i] = info.summary;
+    }
+
+    const return_string = JSON.stringify(return_json, null, 2);
+    fs.writeFile('data.json', return_string, (err) => {
+      if (err) {
+        console.error('Error writing file:', err);
+      } else {
+        console.log('File has been saved!');
+      }
+    });
   }
 
   return (
