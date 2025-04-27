@@ -4,6 +4,8 @@ import React, { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowUpTrayIcon, DocumentTextIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 import Navigation from '../../components/Navigation';
+import fs from 'fs';
+import path from 'path';
 
 const researchPapers = [
   {
@@ -32,6 +34,8 @@ export default function HomePage() {
   const [isDragging, setIsDragging] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const API_URL = "https://dc09-4-39-199-2.ngrok-free.app/";
+
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -40,13 +44,19 @@ export default function HomePage() {
       // Automatically upload the file
       try {
         const formData = new FormData();
-        formData.append('file', file);
-        // In a real app, you would send this to your backend
-        console.log('Uploading file:', file.name);
-        // Simulate upload delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        formData.append('pdf_file', file);
+        const fetch_url = API_URL + "request_curriculum";
+        const response = await fetch(fetch_url, {
+              method: 'POST',
+              body: formData // Pass the FormData object as the body
+        });
         setUploadedFile(file.name);
         setSelectedFile(null);
+        if (response.ok) {
+        	const result = await response.json();
+        	console.log(`Upload successful! Response: ${JSON.stringify(result)}`);
+          parseData(result);
+    	  }
         if (fileInputRef.current) {
           fileInputRef.current.value = '';
         }
@@ -79,13 +89,19 @@ export default function HomePage() {
       // Automatically upload the file
       try {
         const formData = new FormData();
-        formData.append('file', file);
-        // In a real app, you would send this to your backend
-        console.log('Uploading file:', file.name);
-        // Simulate upload delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        formData.append('pdf_file', file);
+        const fetch_url = API_URL + "request_curriculum";
+        const response = await fetch(fetch_url, {
+              method: 'POST',
+              body: formData // Pass the FormData object as the body
+        });
         setUploadedFile(file.name);
         setSelectedFile(null);
+        if (response.ok) {
+        	const result = await response.json();
+        	console.log(`Upload successful! Response: ${JSON.stringify(result)}`);
+          parseData(result);
+    	  }
       } catch (error) {
         console.error('Error uploading file:', error);
         alert('Error uploading file. Please try again.');
@@ -94,6 +110,42 @@ export default function HomePage() {
       alert('Please drop a PDF file');
     }
   };
+
+  const parseData = async (result) => {
+    const filePath = path.join(process.cwd(), 'data.json');
+    const get_url = API_URL + `${JSON.stringify(result)}`;
+    const response = await fetch(get_url);
+    const num_lessons = await response.json();
+
+    if (num_lessons.status != 0) {
+      console.log("error! not finished")
+    } else {
+      const num_units = num_lessons.num_lessons;
+
+      const return_json = {
+        title: num_lessons.title,
+        summary: num_lessons.summary,
+      }
+
+      for (let i = 0; i < num_units; i++) {
+        const lesson_url = get_url + '/' + i;
+        const response = await fetch(lesson_url);
+        const info = await response.json();
+        return_json["title" + i] = info.title;
+        return_json["summary" + i] = info.summary;
+      }
+
+      const return_string = JSON.stringify(return_json, null, 2);
+      fs.writeFile('data.json', return_string, (err) => {
+        if (err) {
+          console.error('Error writing file:', err);
+        } else {
+          console.log('File has been saved!');
+        }
+      });
+    }
+
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-primary-50">
